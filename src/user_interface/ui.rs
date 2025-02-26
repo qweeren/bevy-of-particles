@@ -1,10 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::input::input::BrushSize;
-
-/// Resource to store the currently selected material.
-#[derive(Resource)]
-pub struct SelectedMaterial(pub u8);
+use crate::{input::input::{BrushSize, SelectedMaterial}, registry::MATERIAL_NAMES};
 
 /// UI system that displays a sidebar with material selection buttons.
 pub fn ui_system(

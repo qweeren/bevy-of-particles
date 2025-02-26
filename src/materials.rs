@@ -1,16 +1,5 @@
-
-use bevy::color::Color;
-
 use crate::grid::{self, Grid};
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Material {
-    Empty = 0,    // No material
-    Sand = 1,     // Powder type
-    Water = 2,    // Liquid type
-    Concrete = 3, // Solid type
-    Smoke = 4,    // Gas type
-}
+use crate::registry::Material;
 
 // Material falls downward if the space below is empty
 fn fall(x: usize, y: usize, grid: &mut Grid) -> bool {
@@ -87,18 +76,6 @@ impl MaterialBehavior for Material {
             Material::Empty => {
                 // No behavior
             }
-        }
-    }
-}
-
-impl Material {
-    pub fn color(&self) -> Color {
-        match self {
-            Material::Empty => Color::BLACK,
-            Material::Sand => Color::srgb(0.76, 0.70, 0.50),    // Sandy beige
-            Material::Water => Color::srgb(0.0, 0.5, 1.0),     // Light blue
-            Material::Concrete => Color::srgb(0.5, 0.5, 0.5),  // Gray
-            Material::Smoke => Color::srgb(0.8, 0.8, 0.8),     // Light gray
         }
     }
 }

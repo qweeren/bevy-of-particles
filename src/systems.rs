@@ -3,10 +3,17 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
+use bevy::sprite::Anchor;
+use bevy::window::PrimaryWindow;
 use crate::grid::{Grid, GRID_WIDTH, GRID_HEIGHT, CELL_SIZE};
-use crate::materials::{Material, MaterialBehavior};
+use crate::materials::MaterialBehavior;
+use crate::registry::Material;
 
-pub fn setup(mut commands: Commands, mut images: ResMut<Assets<Image>>) {
+pub fn setup(
+    mut commands: Commands,
+    mut images: ResMut<Assets<Image>>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+) {
     // Spawn a 2D camera
     commands.spawn(Camera2d {
         ..default()
@@ -32,17 +39,22 @@ pub fn setup(mut commands: Commands, mut images: ResMut<Assets<Image>>) {
         pixel[2] = 0;   // B
         pixel[3] = 255; // A
     }
-    let image_handle = images.add(image);
 
+    let image_handle = images.add(image);
+    let window = window_query.get_single().unwrap();
     // Spawn a sprite with the texture
-    commands.spawn(Sprite {
-        custom_size: Some(Vec2::new(
-            GRID_WIDTH as f32 * CELL_SIZE,
-            GRID_HEIGHT as f32 * CELL_SIZE,
-        )),
-        image: image_handle.clone(),
-        ..default()
-    });
+    commands.spawn((
+        Sprite {
+            image: image_handle.clone(),
+            custom_size: Some(Vec2::new(
+                (GRID_WIDTH as f32) * CELL_SIZE,
+                (GRID_HEIGHT as f32) * CELL_SIZE,
+            )),
+            anchor: Anchor::Custom(Vec2::new(-0.5, 0.0)),
+            ..Default::default()
+        },
+        Transform::from_xyz(-window.width() / 2.0, 0.0, 0.0),
+    ));
 
     // Store the texture handle as a resource
     commands.insert_resource(SimulationTexture { image_handle });
