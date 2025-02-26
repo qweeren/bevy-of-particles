@@ -18,6 +18,16 @@ fn fall(x: usize, y: usize, grid: &mut Grid) -> bool {
         grid.move_to(x, y, x, y + 1);
         return true; // Successfully moved
     }
+    let left = x > 0 && grid.get(x - 1, y) == Material::Empty as u8;
+    let right = x < grid::GRID_WIDTH - 1 && grid.get(x + 1, y) == Material::Empty as u8;
+    if left && right {
+        // Randomly choose left or right
+        if rand::random() {
+            grid.move_to(x, y, x - 1, y +1);
+        } else {
+            grid.move_to(x, y, x + 1, y +1);
+        }
+    }
     false // Blocked or at bottom
 }
 
