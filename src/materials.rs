@@ -3,18 +3,30 @@ use crate::registry::Material;
 
 // Material falls downward if the space below is empty
 fn fall(x: usize, y: usize, grid: &mut Grid) -> bool {
+    // Check directly below
     if y < grid::GRID_HEIGHT - 1 && grid.get(x, y + 1) == Material::Empty as u8 {
         grid.move_to(x, y, x, y + 1);
         return true; // Successfully moved
     }
-    let left = x > 0 && grid.get(x - 1, y) == Material::Empty as u8;
-    let right = x < grid::GRID_WIDTH - 1 && grid.get(x + 1, y) == Material::Empty as u8;
-    if left && right {
-        // Randomly choose left or right
-        if rand::random() {
-            grid.move_to(x, y, x - 1, y +1);
-        } else {
-            grid.move_to(x, y, x + 1, y +1);
+
+    // Only check diagonals if we're not at the bottom
+    if y < grid::GRID_HEIGHT - 1 {
+        let left = x > 0 && grid.get(x - 1, y + 1) == Material::Empty as u8;
+        let right = x < grid::GRID_WIDTH - 1 && grid.get(x + 1, y + 1) == Material::Empty as u8;
+        if left && right {
+            // Randomly choose left or right
+            if rand::random() {
+                grid.move_to(x, y, x - 1, y + 1);
+            } else {
+                grid.move_to(x, y, x + 1, y + 1);
+            }
+            return true; // Successfully moved diagonally
+        } else if left {
+            grid.move_to(x, y, x - 1, y + 1);
+            return true;
+        } else if right {
+            grid.move_to(x, y, x + 1, y + 1);
+            return true;
         }
     }
     false // Blocked or at bottom
@@ -44,6 +56,26 @@ fn rise(x: usize, y: usize, grid: &mut Grid) -> bool {
         grid.move_to(x, y, x, y - 1);
         return true; // Successfully moved
     }
+    if y > grid::GRID_HEIGHT + 1 {
+        let left = x > 0 && grid.get(x - 1, y - 1) == Material::Empty as u8;
+        let right = x < grid::GRID_WIDTH - 1 && grid.get(x + 1, y - 1) == Material::Empty as u8;
+        if left && right {
+            // Randomly choose left or right
+            if rand::random() {
+                grid.move_to(x, y, x - 1, y - 1);
+            } else {
+                grid.move_to(x, y, x + 1, y - 1);
+            }
+            return true; // Successfully moved diagonally
+        } else if left {
+            grid.move_to(x, y, x - 1, y - 1);
+            return true;
+        } else if right {
+            grid.move_to(x, y, x + 1, y - 1);
+            return true;
+        }
+    }
+
     false // Blocked or at top
 }
 
