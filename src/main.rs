@@ -1,4 +1,9 @@
 use bevy::prelude::*;
+use grid::Grid;
+
+mod systems;
+mod materials;
+mod grid;
 
 fn main() {
     App::new()
@@ -10,11 +15,7 @@ fn main() {
             }),
             ..default()
         }))
-        .add_systems(Startup, setup)
+        .add_systems(Startup, systems::setup)
+        .insert_resource(Grid::new()) // Add the grid as a resource
         .run();
-}
-
-fn setup(mut commands: Commands) {
-    // Spawn a 2D camera
-    commands.spawn(Camera2d::default());
 }
