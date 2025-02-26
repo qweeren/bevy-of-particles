@@ -20,7 +20,8 @@ fn main() {
         .set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Falling Sand Simulator".into(),
-                resolution: (1000.0 + 220.0, 1000.0).into(),
+                resolution: (1000.0 + 230.0, 1000.0).into(),
+                resizable: false,
                 ..default()
             }),
             ..default()
