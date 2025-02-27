@@ -5,10 +5,7 @@ pub struct Drawing(pub bool);
 
 // Resource to store the last mouse grid position
 #[derive(Resource, Default)]
-pub struct LastMouseGridPos {
-    pub x: Option<usize>,
-    pub y: Option<usize>,
-}
+pub struct LastMouseGridPos(pub Option<(usize, usize)>);
 
 #[derive(Resource)]
 pub struct BrushSize(pub usize); // Radius in cells
