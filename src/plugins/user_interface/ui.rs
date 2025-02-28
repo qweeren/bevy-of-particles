@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::{input::input::{BrushSize, SelectedMaterial}, registry::MATERIAL_NAMES};
+use crate::plugins::input::resources::{BrushSize, SelectedMaterial};
+use crate::registry::MATERIAL_NAMES;
 
 /// UI system that displays a sidebar with material selection buttons.
 pub fn ui_system(
