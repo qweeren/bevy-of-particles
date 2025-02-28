@@ -2,7 +2,7 @@
 
 A physics-based particle simulation built with Rust and the Bevy game engine. This project implements a falling sand game where different materials interact with each other based on their physical properties like density.
 
-[gif here displaying the overall simulation with different materials interacting]
+![gif loading...](https://cdn.discordapp.com/attachments/1238930240567377992/1345171887281541161/Desktop_2025.03.01_-_02.06.47.01.gif?ex=67c39472&is=67c242f2&hm=0602bbd353dd8d514e10e393472877ffb7c6d02fb7da8ac0cf571461ea25a9c7&)
 
 ## Features
 
@@ -32,8 +32,6 @@ A physics-based particle simulation built with Rust and the Bevy game engine. Th
 - Select materials from the sidebar
 - Adjust brush size using the slider
 
-[gif here displaying drawing with different brush sizes]
-
 ## Building and Running
 
 1. Ensure you have Rust installed
@@ -60,12 +58,6 @@ The simulation is optimized for performance, utilizing:
 - Efficient grid updates
 - Parallel processing for particle updates
 - Optimized rendering with texture updates
-
-[gif here displaying large-scale particle interactions to show performance]
-
-## License
-
-[Add your chosen license here]
 
 ## Contributing
 
