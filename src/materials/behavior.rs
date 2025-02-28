@@ -1,7 +1,7 @@
 use crate::grid::Grid;
 use crate::materials::Material;
 use crate::config;
-use rand::{prelude::*, thread_rng};
+use rand::{prelude::*, rng};
 
 pub trait MaterialBehavior {
     fn update(&self, x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid);
@@ -72,7 +72,7 @@ fn try_move_density_based(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Gr
         
         match (left, right) {
             (true, true) => {
-                if thread_rng().gen::<bool>() {
+                if rng().random::<bool>() {
                     if check_and_swap(x - 1, y + 1) { return true; }
                     if check_and_swap(x + 1, y + 1) { return true; }
                 } else {
@@ -100,7 +100,7 @@ fn rise(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
         
         match (left, right) {
             (true, true) => {
-                if thread_rng().gen::<bool>() {
+                if rng().random::<bool>() {
                     new_grid.move_to(x, y, x - 1, y - 1)
                 } else {
                     new_grid.move_to(x, y, x + 1, y - 1)
@@ -134,7 +134,7 @@ fn fall(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
         
         match (left, right) {
             (true, true) => {
-                if thread_rng().gen::<bool>() {
+                if rng().random::<bool>() {
                     new_grid.move_to(x, y, x - 1, y + 1)
                 } else {
                     new_grid.move_to(x, y, x + 1, y + 1)
@@ -157,13 +157,13 @@ fn fall(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
 }
 
 fn flow(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let left = x > 0 && old_grid.get(x - 1, y) == Material::Empty as u8;
     let right = x < config::GRID_WIDTH - 1 && old_grid.get(x + 1, y) == Material::Empty as u8;
 
     match (left, right) {
         (true, true) => {
-            if rng.gen::<bool>() {
+            if rng.random::<bool>() {
                 new_grid.move_to(x, y, x + 1, y);
             } else {
                 new_grid.move_to(x, y, x - 1, y);
