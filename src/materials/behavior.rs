@@ -1,4 +1,4 @@
-use crate::grid::{self, Grid};
+use crate::grid::Grid;
 use crate::materials::Material;
 use crate::config;
 

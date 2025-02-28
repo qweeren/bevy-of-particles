@@ -1,7 +1,7 @@
 // Grid Configuration
-pub const GRID_WIDTH: usize = 100;
-pub const GRID_HEIGHT: usize = 100;
-pub const CELL_SIZE: f32 = 10.0;
+pub const GRID_WIDTH: usize = 500;
+pub const GRID_HEIGHT: usize = 500;
+pub const CELL_SIZE: f32 = 2.0;
 
 // UI Configuration
 pub const UI_SIDEBAR_WIDTH: f32 = 230.0;

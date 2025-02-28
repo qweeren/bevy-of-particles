@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use crate::config;
-use crate::grid::{self, Grid};
-use crate::materials::Material;
+use crate::grid::Grid;
 use super::SimulationTexture;
 
 pub fn render_grid(
