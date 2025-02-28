@@ -2,7 +2,7 @@
 
 A physics-based particle simulation built with Rust and the Bevy game engine. This project implements a falling sand game where different materials interact with each other based on their physical properties like density.
 
-![gif loading...](https://cdn.discordapp.com/attachments/1238930240567377992/1345171887281541161/Desktop_2025.03.01_-_02.06.47.01.gif)
+![gif loading...](https://i.imgur.com/BSOhak3.gif)
 
 ## Features
 
