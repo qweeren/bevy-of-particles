@@ -1,11 +1,16 @@
 // Grid Configuration
-pub const GRID_WIDTH: usize = 500;
-pub const GRID_HEIGHT: usize = 500;
-pub const CELL_SIZE: f32 = 2.0;
+pub const GRID_WIDTH: usize = 250;
+pub const GRID_HEIGHT: usize = 250;
+pub const CELL_SIZE: f32 = 4.0;
 
 // UI Configuration
 pub const UI_SIDEBAR_WIDTH: f32 = 230.0;
 pub const UI_PANEL_DEFAULT_WIDTH: f32 = 100.0;
+
+// Camera Configuration
+// This offset compensates for the UI sidebar to ensure proper alignment
+// between mouse position and grid coordinates
+pub const CAMERA_OFFSET_X: f32 = UI_SIDEBAR_WIDTH / 2.0;
 
 // Window Configuration
 pub struct WindowConfig {
@@ -22,9 +27,6 @@ impl WindowConfig {
         Self { width, height }
     }
 }
-
-// Camera Configuration
-pub const CAMERA_OFFSET_X: f32 = 115.0; // If this is still needed, document why
 
 // Derived Constants
 pub const GRID_PIXEL_WIDTH: f32 = GRID_WIDTH as f32 * CELL_SIZE;

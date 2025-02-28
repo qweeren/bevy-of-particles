@@ -1,27 +1,11 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use crate::config::{GRID_WIDTH, GRID_HEIGHT, CELL_SIZE, CAMERA_OFFSET_X};
+use crate::config::{GRID_WIDTH, GRID_HEIGHT, CELL_SIZE};
 use crate::grid::Grid;
-use crate::utils::line::bresenham_line;
+use crate::utils::{line::bresenham_line, grid_utils::get_grid_pos};
 
 use super::input::{Drawing, LastMouseGridPos};
 use super::resources::{BrushSize, SelectedMaterial};
-
-pub fn get_grid_pos(window: &Window, camera: &Camera, camera_transform: &GlobalTransform) -> Option<(usize, usize)> {
-    if let Some(cursor_pos) = window.cursor_position() {
-        if let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, cursor_pos) {
-            let adjusted_x = world_pos.x + (GRID_WIDTH as f32 * CELL_SIZE / 2.0);
-            let adjusted_y = world_pos.y + (GRID_HEIGHT as f32 * CELL_SIZE / 2.0);
-            let grid_x = ((adjusted_x + CAMERA_OFFSET_X) / CELL_SIZE) as usize;
-            let grid_y = (GRID_HEIGHT as f32 - adjusted_y / CELL_SIZE) as usize;
-            
-            if grid_x < GRID_WIDTH && grid_y < GRID_HEIGHT {
-                return Some((grid_x, grid_y));
-            }
-        }
-    }
-    None
-}
 
 fn place_material_with_brush(grid: &mut Grid, x: usize, y: usize, material: u8, brush_size: usize) {
     let half_size = brush_size as isize / 2;
@@ -31,6 +15,7 @@ fn place_material_with_brush(grid: &mut Grid, x: usize, y: usize, material: u8, 
             if dx * dx + dy * dy <= radius_sq {
                 let nx = x as isize + dx;
                 let ny = y as isize + dy;
+                // Only place material if the position is in bounds AND the cell is empty
                 if grid.in_bounds(nx, ny) && grid.get(nx as usize, ny as usize) == 0 {
                     grid.set(nx as usize, ny as usize, material);
                 }
