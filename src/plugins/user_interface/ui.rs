@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
+use crate::config::UI_PANEL_DEFAULT_WIDTH;
 use crate::plugins::input::resources::{BrushSize, SelectedMaterial};
 use crate::registry::MATERIAL_NAMES;
 
@@ -7,11 +8,11 @@ use crate::registry::MATERIAL_NAMES;
 pub fn ui_system(
     mut egui_context: EguiContexts,
     mut selected_material: ResMut<SelectedMaterial>,
-    mut brush_size: ResMut<BrushSize>
+    mut brush_size: ResMut<BrushSize>,
 ) {
     egui::SidePanel::right("right_panel")
         .resizable(false)
-        .default_width(100.0)
+        .default_width(UI_PANEL_DEFAULT_WIDTH)
         .show(egui_context.ctx_mut(), |ui| {
             ui.heading("Select Material");
 

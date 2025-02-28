@@ -1,4 +1,4 @@
-use crate::grid::{GRID_HEIGHT, GRID_WIDTH};
+use crate::config::{GRID_HEIGHT, GRID_WIDTH};
 
 pub(crate) fn bresenham_line(x0: usize, y0: usize, x1: usize, y1: usize) -> impl Iterator<Item = (usize, usize)> {
     let dx = (x1 as isize - x0 as isize).abs();

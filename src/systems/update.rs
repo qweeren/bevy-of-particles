@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use crate::config::GRID_HEIGHT;
+use crate::config::GRID_WIDTH;
 use crate::grid::*;
 use crate::materials::MaterialBehavior;
 use crate::materials::Material;

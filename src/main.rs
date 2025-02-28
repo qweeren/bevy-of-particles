@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
+use crate::config::WindowConfig;
 
+mod config;
 mod systems;
 mod materials;
 mod grid;
@@ -11,12 +13,14 @@ mod plugins;
 use plugins::{SimulationPlugin, InputPlugin, UIPlugin};
 
 fn main() {
+    let window_config = WindowConfig::new();
+    
     App::new()
         .add_plugins(DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Falling Sand Simulator".into(),
-                    resolution: (1000.0 + 230.0, 1000.0).into(),
+                    resolution: (window_config.width, window_config.height).into(),
                     resizable: false,
                     ..default()
                 }),

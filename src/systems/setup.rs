@@ -3,7 +3,7 @@ use bevy::asset::RenderAssetUsages;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy::sprite::Anchor;
 use bevy::window::PrimaryWindow;
-use crate::grid::{GRID_WIDTH, GRID_HEIGHT, CELL_SIZE};
+use crate::config::*;
 
 #[derive(Resource)]
 pub struct SimulationTexture {

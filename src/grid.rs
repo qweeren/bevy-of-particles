@@ -1,9 +1,5 @@
 use bevy::prelude::*;
-
-// Grid dimensions and rendering size
-pub const GRID_WIDTH: usize = 100;
-pub const GRID_HEIGHT: usize = 100;
-pub const CELL_SIZE: f32 = 10.0; // 10x10 pixels per cell
+use crate::config::{GRID_WIDTH, GRID_HEIGHT};
 
 /// The simulation grid, storing materials in a 1D vector
 #[derive(Clone, Resource)]

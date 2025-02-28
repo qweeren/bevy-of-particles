@@ -15,9 +15,7 @@ impl Plugin for SimulationPlugin {
             .insert_resource(BrushSize(3))
             .insert_resource(LastMouseGridPos::default())
             .insert_resource(Drawing::default())
-            .add_systems(Startup, (
-                setup
-            ))
+            .add_systems(Startup, setup)
             .add_systems(Update, (
                 update_grid,
                 render_grid,
