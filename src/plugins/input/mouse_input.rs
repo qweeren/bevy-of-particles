@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use crate::config::{GRID_WIDTH, GRID_HEIGHT, CELL_SIZE};
 use crate::grid::Grid;
 use crate::utils::{line::bresenham_line, grid_utils::get_grid_pos};
 
