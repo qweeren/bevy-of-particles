@@ -27,7 +27,8 @@ fn place_material_with_brush(grid: &mut Grid, x: usize, y: usize, material: u8, 
             if dx * dx + dy * dy <= radius_sq {
                 let nx = x as isize + dx;
                 let ny = y as isize + dy;
-                if grid.in_bounds(nx, ny) {
+                // Only place material if the position is in bounds AND the cell is empty
+                if grid.in_bounds(nx, ny) && grid.get(nx as usize, ny as usize) == 0 {
                     grid.set(nx as usize, ny as usize, material);
                 }
             }
@@ -48,29 +49,36 @@ pub fn mouse_click_draw(
     let window = window_query.get_single().unwrap();
     let (camera, camera_transform) = camera_q.single();
 
-    // Start drawing and set initial position
-    if buttons.just_pressed(MouseButton::Left) {
-        drawing.0 = true;
-        if let Some((grid_x, grid_y)) = get_grid_pos(window, camera, camera_transform) {
-            last_pos.0 = Some((grid_x, grid_y));
-        }
-    }
-
-    // Draw continuous line while active
-    if drawing.0 {
-        if let Some((grid_x, grid_y)) = get_grid_pos(window, camera, camera_transform) {
-            if let Some(last) = last_pos.0 {
-                let line_points = bresenham_line(last.0, last.1, grid_x, grid_y);
-                for (x, y) in line_points {
-                    place_material_with_brush(&mut grid, x, y, selected_material.0, brush_size.0);
-                }
+    // Handle drawing state based on mouse button state
+    match (buttons.pressed(MouseButton::Left), drawing.0) {
+        (true, false) => {
+            // Start drawing
+            drawing.0 = true;
+            if let Some(pos) = get_grid_pos(window, camera, camera_transform) {
+                place_material_with_brush(&mut grid, pos.0, pos.1, selected_material.0, brush_size.0);
+                last_pos.0 = Some(pos);
             }
-            last_pos.0 = Some((grid_x, grid_y));
         }
-    }
-
-    // Stop drawing
-    if buttons.just_released(MouseButton::Left) {
-        drawing.0 = false;
+        (true, true) => {
+            // Continue drawing
+            if let Some(current_pos) = get_grid_pos(window, camera, camera_transform) {
+                // Always place at current position
+                place_material_with_brush(&mut grid, current_pos.0, current_pos.1, selected_material.0, brush_size.0);
+                
+                // Draw line from last position if it exists
+                if let Some(last) = last_pos.0 {
+                    let line_points = bresenham_line(last.0, last.1, current_pos.0, current_pos.1);
+                    for (x, y) in line_points {
+                        place_material_with_brush(&mut grid, x, y, selected_material.0, brush_size.0);
+                    }
+                }
+                last_pos.0 = Some(current_pos);
+            }
+        }
+        (false, _) => {
+            // Stop drawing
+            drawing.0 = false;
+            last_pos.0 = None;
+        }
     }
 }

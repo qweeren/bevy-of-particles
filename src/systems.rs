@@ -8,6 +8,7 @@ use bevy::window::PrimaryWindow;
 use crate::grid::{Grid, GRID_WIDTH, GRID_HEIGHT, CELL_SIZE};
 use crate::materials::MaterialBehavior;
 use crate::registry::Material;
+use rayon::prelude::*;
 
 pub fn setup(
     mut commands: Commands,
@@ -67,21 +68,29 @@ pub struct SimulationTexture {
 
 pub fn update_grid(mut grid: ResMut<Grid>) {
     let mut new_grid = grid.clone();
-    for y in (0..GRID_HEIGHT).rev() { // Bottom-up for gravity
-        for x in 0..GRID_WIDTH {
-            let material = grid.get(x, y);
-            if material != Material::Empty as u8 {
-                let material_enum = match material {
-                    1 => Material::Sand,
-                    2 => Material::Water,
-                    3 => Material::Concrete,
-                    4 => Material::Smoke,
-                    _ => Material::Empty,
-                };
-                material_enum.update(x, y, &mut new_grid);
+    
+    // Process in chunks of rows to maintain local consistency
+    for chunk_y in (0..GRID_HEIGHT).step_by(3).rev() {
+        // Process 3 rows at a time to handle diagonal movements
+        let chunk_end = (chunk_y + 3).min(GRID_HEIGHT);
+        
+        for y in chunk_y..chunk_end {
+            for x in 0..GRID_WIDTH {
+                let material = grid.get(x, y);
+                if material != Material::Empty as u8 {
+                    let material_enum = match material {
+                        1 => Material::Sand,
+                        2 => Material::Water,
+                        3 => Material::Concrete,
+                        4 => Material::Smoke,
+                        _ => Material::Empty,
+                    };
+                    material_enum.update(x, y, &mut new_grid);
+                }
             }
         }
     }
+    
     *grid = new_grid;
 }
 
