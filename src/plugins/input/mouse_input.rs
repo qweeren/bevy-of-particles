@@ -1,3 +1,4 @@
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use crate::config;
@@ -7,6 +8,8 @@ use crate::materials::Material;
 
 use super::input::{Drawing, LastMouseGridPos};
 use super::resources::{BrushSize, SelectedMaterial};
+
+const BRUSH_SIZE_SCROLL_STEP: u8 = 1;
 
 fn place_material_with_brush(grid: &mut Grid, x: usize, y: usize, material: u8, brush_size: usize) {
     let half_size = brush_size as isize / 2;
@@ -63,13 +66,28 @@ fn place_material_with_brush(grid: &mut Grid, x: usize, y: usize, material: u8, 
 pub fn mouse_click_draw(
     window_query: Query<&Window, With<PrimaryWindow>>,
     buttons: Res<ButtonInput<MouseButton>>,
+    mut scroll_evr: EventReader<MouseWheel>,
     camera_q: Query<(&Camera, &GlobalTransform)>,
     selected_material: Res<SelectedMaterial>,
     mut grid: ResMut<Grid>,
     mut drawing: ResMut<Drawing>,
-    brush_size: Res<BrushSize>,
+    mut brush_size: ResMut<BrushSize>,
     mut last_pos: ResMut<LastMouseGridPos>,
 ) {
+    // Handle scroll events for brush size
+    for ev in scroll_evr.read() {
+        let scroll_amount = match ev.unit {
+            MouseScrollUnit::Line => ev.y,
+            MouseScrollUnit::Pixel => ev.y / 20.0, // Adjust sensitivity for pixel-based scrolling
+        };
+        
+        if scroll_amount > 0.0 {
+            brush_size.0 = (brush_size.0 + BRUSH_SIZE_SCROLL_STEP).min(30);
+        } else if scroll_amount < 0.0 {
+            brush_size.0 = (brush_size.0.saturating_sub(BRUSH_SIZE_SCROLL_STEP)).max(1);
+        }
+    }
+
     let window = window_query.get_single().unwrap();
     let (camera, camera_transform) = camera_q.single();
 
