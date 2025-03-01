@@ -27,20 +27,35 @@ pub fn find_horizontal_space(grid: &Grid, x: usize, y: usize, max_distance: usiz
     let mut left_x = x;
     let mut right_x = x;
     
-    // Check left
+    // Check both directions simultaneously
     for dx in 1..=max_distance {
-        if x < dx || grid.get(x - dx, y).material_type != Material::Empty as u8 {
+        let mut check_left = x >= dx;
+        let mut check_right = x + dx < config::GRID_WIDTH;
+        
+        if !check_left && !check_right {
             break;
         }
-        left_x = x - dx;
-    }
-    
-    // Check right
-    for dx in 1..=max_distance {
-        if x + dx >= config::GRID_WIDTH || grid.get(x + dx, y).material_type != Material::Empty as u8 {
+
+        // Check left if possible
+        if check_left && grid.get(x - dx, y).material_type == Material::Empty as u8 {
+            left_x = x - dx;
+        } else {
+            // Stop checking left if blocked
+            check_left = false;
+        }
+
+        // Check right if possible
+        if check_right && grid.get(x + dx, y).material_type == Material::Empty as u8 {
+            right_x = x + dx;
+        } else {
+            // Stop checking right if blocked
+            check_right = false;
+        }
+
+        // Break if both directions are blocked
+        if !check_left && !check_right {
             break;
         }
-        right_x = x + dx;
     }
     
     (left_x, right_x)
@@ -49,15 +64,20 @@ pub fn find_horizontal_space(grid: &Grid, x: usize, y: usize, max_distance: usiz
 /// Finds the maximum distance a particle can move vertically before hitting an obstacle
 /// Returns the maximum possible y coordinate in downward direction
 pub fn find_vertical_space(grid: &Grid, x: usize, y: usize, max_distance: usize) -> usize {
-    let mut bottom_y = y;
-    
-    // Check downward
-    for dy in 1..=max_distance {
-        if y + dy >= config::GRID_HEIGHT || grid.get(x, y + dy).material_type != Material::Empty as u8 {
-            break;
-        }
-        bottom_y = y + dy;
+    // Early return if already at bottom or max_distance is 0
+    if y >= config::GRID_HEIGHT - 1 || max_distance == 0 {
+        return y;
     }
+
+    // Calculate the maximum possible distance considering grid bounds
+    let max_check = (max_distance + y).min(config::GRID_HEIGHT - 1) - y;
     
-    bottom_y
+    // Use iterator to find first non-empty cell
+    match (1..=max_check)
+        .take_while(|&dy| grid.get(x, y + dy).material_type == Material::Empty as u8)
+        .last()
+    {
+        Some(last_empty) => y + last_empty,
+        None => y
+    }
 }
