@@ -17,15 +17,17 @@ pub fn ui_system(
     let window = window_query.get_single().unwrap();
     let (camera, camera_transform) = camera_q.single();
 
-    // Draw the brush preview circle
+    // Draw the brush preview circle only when mouse is over the grid
     if let Some(cursor_pos) = window.cursor_position() {
-        let radius = brush_size.0 as f32 * 2.0; // Multiply by 2 for better visibility
-        let painter = egui_context.ctx_mut().layer_painter(egui::LayerId::new(egui::Order::Foreground, egui::Id::new("brush_preview")));
-        painter.circle_stroke(
-            egui::pos2(cursor_pos.x, cursor_pos.y),
-            radius,
-            egui::Stroke::new(1.0, egui::Color32::WHITE),
-        );
+        if get_grid_pos(window, camera, camera_transform).is_some() {
+            let radius = brush_size.0 as f32 * 2.0; // Multiply by 2 for better visibility
+            let painter = egui_context.ctx_mut().layer_painter(egui::LayerId::new(egui::Order::Foreground, egui::Id::new("brush_preview")));
+            painter.circle_stroke(
+                egui::pos2(cursor_pos.x, cursor_pos.y),
+                radius,
+                egui::Stroke::new(1.0, egui::Color32::WHITE),
+            );
+        }
     }
 
     // Original sidebar UI
