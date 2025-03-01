@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use crate::config;
 use crate::grid::Grid;
 use super::SimulationTexture;
+use crate::materials::Material;
 
 pub fn render_grid(
     grid: Res<Grid>,
@@ -11,8 +12,7 @@ pub fn render_grid(
     if let Some(image) = images.get_mut(&simulation_texture.image_handle) {
         for y in 0..config::GRID_HEIGHT {
             for x in 0..config::GRID_WIDTH {
-                let material_id = grid.get(x, y);
-                let material = crate::registry::material_from_id(grid.get(x, y).material_type);
+                let material = Material::from_id(grid.get(x, y).material_type);
                 let properties = material.properties();
                 let pixel_index = (y * config::GRID_WIDTH + x) * 4;
                 

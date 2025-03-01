@@ -5,6 +5,7 @@ pub enum Material {
     Water = 2,
     Concrete = 3,
     Smoke = 4,
+    Fire = 5,
 }
 
 impl Material {
@@ -15,6 +16,7 @@ impl Material {
             2 => Material::Water,
             3 => Material::Concrete,
             4 => Material::Smoke,
+            5 => Material::Fire,
             _ => Material::Empty,
         }
     }
@@ -32,6 +34,8 @@ bitflags! {
     }
 }
 
+use super::properties::MaterialProperties;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Particle {
     pub material_type: u8,    // 8 bits for material type
@@ -41,33 +45,26 @@ pub struct Particle {
 
 impl Particle {
     pub fn new(material_type: Material) -> Self {
-        let (flags, properties) = match material_type {
-            Material::Empty => (
-                ParticleFlags::empty(),
-                0,
-            ),
-            Material::Sand => (
-                ParticleFlags::MOVABLE,
-                Self::pack_properties(194, 178, 128, 16, 9),
-            ),
-            Material::Water => (
-                ParticleFlags::MOVABLE | ParticleFlags::FLOWS,
-                Self::pack_properties(0, 119, 190, 10, 1),
-            ),
-            Material::Smoke => (
-                ParticleFlags::MOVABLE | ParticleFlags::FLOWS | ParticleFlags::RISES | ParticleFlags::DISPERSES,
-                Self::pack_properties(200, 200, 200, 1, 1),
-            ),
-            Material::Concrete => (
-                ParticleFlags::empty(),
-                Self::pack_properties(128, 128, 128, 24, 10),
-            ),
+        let props = material_type.properties();
+        let flags = match material_type {
+            Material::Empty => ParticleFlags::empty(),
+            Material::Sand => ParticleFlags::MOVABLE,
+            Material::Water => ParticleFlags::MOVABLE | ParticleFlags::FLOWS,
+            Material::Smoke => ParticleFlags::MOVABLE | ParticleFlags::FLOWS | ParticleFlags::RISES | ParticleFlags::DISPERSES,
+            Material::Concrete => ParticleFlags::empty(),
+            Material::Fire => ParticleFlags::MOVABLE | ParticleFlags::RISES | ParticleFlags::DISPERSES,
         };
 
         Self {
             material_type: material_type as u8,
             flags,
-            properties,
+            properties: Self::pack_properties(
+                props.color.0,
+                props.color.1,
+                props.color.2,
+                props.density,
+                props.viscosity
+            ),
         }
     }
 

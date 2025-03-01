@@ -1,9 +1,10 @@
 use super::types::Material;
 
+#[derive(Debug, Clone, Copy)]
 pub struct MaterialProperties {
     pub color: (u8, u8, u8),
-    pub density: f32,
-    pub viscosity: f32,
+    pub density: u8,    // Changed to u8 (0-31)
+    pub viscosity: u8,  // Changed to u8 (0-15)
 }
 
 impl Material {
@@ -11,28 +12,33 @@ impl Material {
         match self {
             Material::Empty => MaterialProperties {
                 color: (0, 0, 0),
-                density: 0.0,
-                viscosity: 1.0,
+                density: 0,
+                viscosity: 0,
             },
             Material::Sand => MaterialProperties {
                 color: (194, 178, 128),
-                density: 1.6,
-                viscosity: 0.9, // Sand barely flows
+                density: 16,  // 1.6 * 10
+                viscosity: 9, // 0.9 * 10
             },
             Material::Water => MaterialProperties {
                 color: (0, 119, 190),
-                density: 1.0,
-                viscosity: 0.1, // Reduced significantly to make water much more fluid
+                density: 10,  // 1.0 * 10
+                viscosity: 1, // 0.1 * 10
             },
             Material::Concrete => MaterialProperties {
                 color: (128, 128, 128),
-                density: 2.4,
-                viscosity: 1.0, // Concrete doesn't flow
+                density: 24,  // 2.4 * 10
+                viscosity: 10,// 1.0 * 10
             },
             Material::Smoke => MaterialProperties {
                 color: (200, 200, 200),
-                density: 0.1,
-                viscosity: 0.1, // Smoke spreads very easily
+                density: 1,   // 0.1 * 10
+                viscosity: 1, // 0.1 * 10
+            },
+            Material::Fire => MaterialProperties {
+                color: (255, 50, 50),
+                density: 1,   // 0.1 * 10
+                viscosity: 1, // 0.1 * 10
             },
         }
     }
