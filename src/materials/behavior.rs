@@ -7,6 +7,7 @@ use crate::utils::grid_utils::find_horizontal_space;
 const GRAVITY: f32 = 0.5;
 const MAX_FALL_SPEED: f32 = 8.0;
 const BOUNCE_FACTOR: f32 = 0.3;
+const MIN_MOVEMENT_THRESHOLD: f32 = 0.1;
 
 pub trait MaterialBehavior {
     fn update(&self, x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid);
@@ -130,28 +131,70 @@ fn rise(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
 fn fall(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
     let mut current_velocity = old_grid.get_velocity(x, y);
     
-    // Apply gravity
-    current_velocity += GRAVITY;
-    current_velocity = current_velocity.min(MAX_FALL_SPEED);
-
-    // Convert velocity to discrete steps
-    let fall_distance = current_velocity.abs().round() as usize;
-    if fall_distance == 0 {
+    // Always apply gravity if there's space below
+    if y < config::GRID_HEIGHT - 1 && old_grid.get(x, y + 1) == Material::Empty as u8 {
+        current_velocity += GRAVITY;
+    } else if current_velocity < MIN_MOVEMENT_THRESHOLD {
+        // If blocked and nearly stopped, fully stop
+        current_velocity = 0.0;
+        new_grid.set(x, y, old_grid.get(x, y));
+        new_grid.set_velocity(x, y, current_velocity);
         return false;
     }
+
+    current_velocity = current_velocity.min(MAX_FALL_SPEED);
+
+    // Convert velocity to discrete steps, but always move at least 1 if there's any velocity
+    let fall_distance = (current_velocity.abs().round() as usize).max(1);
 
     let bottom_y = find_vertical_space(old_grid, x, y, fall_distance);
     
     if bottom_y == y {
-        // Hit an obstacle, bounce
+        // Hit an obstacle, check for diagonal movement
         if current_velocity > 1.0 {
-            current_velocity *= -BOUNCE_FACTOR;
+            // Try to slide diagonally
+            let left_clear = x > 0 && old_grid.get(x - 1, y) == Material::Empty as u8;
+            let right_clear = x < config::GRID_WIDTH - 1 && old_grid.get(x + 1, y) == Material::Empty as u8;
+            
+            match (left_clear, right_clear) {
+                (true, true) => {
+                    // Randomly choose direction
+                    if rng().gen::<bool>() {
+                        new_grid.move_to_with_velocity(x, y, x - 1, y);
+                        new_grid.set_velocity(x - 1, y, current_velocity * 0.8);
+                    } else {
+                        new_grid.move_to_with_velocity(x, y, x + 1, y);
+                        new_grid.set_velocity(x + 1, y, current_velocity * 0.8);
+                    }
+                    return true;
+                }
+                (true, false) => {
+                    new_grid.move_to_with_velocity(x, y, x - 1, y);
+                    new_grid.set_velocity(x - 1, y, current_velocity * 0.8);
+                    return true;
+                }
+                (false, true) => {
+                    new_grid.move_to_with_velocity(x, y, x + 1, y);
+                    new_grid.set_velocity(x + 1, y, current_velocity * 0.8);
+                    return true;
+                }
+                _ => {
+                    // Bounce with reduced velocity
+                    current_velocity *= -BOUNCE_FACTOR;
+                    if current_velocity.abs() < MIN_MOVEMENT_THRESHOLD {
+                        current_velocity = 0.0;
+                    }
+                    new_grid.set(x, y, old_grid.get(x, y));
+                    new_grid.set_velocity(x, y, current_velocity);
+                    return false;
+                }
+            }
         } else {
-            current_velocity = 0.0;
+            // Too slow for diagonal movement, just stop
+            new_grid.set(x, y, old_grid.get(x, y));
+            new_grid.set_velocity(x, y, 0.0);
+            return false;
         }
-        new_grid.set(x, y, old_grid.get(x, y));
-        new_grid.set_velocity(x, y, current_velocity);
-        return false;
     }
 
     // Move to the new position

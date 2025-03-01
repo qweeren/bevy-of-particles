@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use crate::config;
 use crate::grid::Grid;
 use crate::utils::{line::bresenham_line, grid_utils::get_grid_pos};
+use crate::materials::Material;
 
 use super::input::{Drawing, LastMouseGridPos};
 use super::resources::{BrushSize, SelectedMaterial};
@@ -9,14 +11,49 @@ use super::resources::{BrushSize, SelectedMaterial};
 fn place_material_with_brush(grid: &mut Grid, x: usize, y: usize, material: u8, brush_size: usize) {
     let half_size = brush_size as isize / 2;
     let radius_sq = half_size * half_size;
+    
+    // First pass: check if we're placing on top of existing particles
+    let mut should_add_velocity = false;
     for dx in -half_size..=half_size {
         for dy in -half_size..=half_size {
             if dx * dx + dy * dy <= radius_sq {
                 let nx = x as isize + dx;
                 let ny = y as isize + dy;
-                // Only place material if the position is in bounds AND the cell is empty
-                if grid.in_bounds(nx, ny) && grid.get(nx as usize, ny as usize) == 0 {
-                    grid.set(nx as usize, ny as usize, material);
+                if grid.in_bounds(nx, ny) {
+                    let ny = ny as usize;
+                    // If there's a particle below, we should add initial velocity
+                    if ny < config::GRID_HEIGHT - 1 && 
+                       grid.get(nx as usize, ny + 1) != Material::Empty as u8 {
+                        should_add_velocity = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if should_add_velocity {
+            break;
+        }
+    }
+
+    // Second pass: place particles with appropriate velocity
+    for dx in -half_size..=half_size {
+        for dy in -half_size..=half_size {
+            if dx * dx + dy * dy <= radius_sq {
+                let nx = x as isize + dx;
+                let ny = y as isize + dy;
+                if grid.in_bounds(nx, ny) {
+                    let nx = nx as usize;
+                    let ny = ny as usize;
+                    // Only place material if the position is in bounds AND the cell is empty
+                    if grid.get(nx, ny) == Material::Empty as u8 {
+                        grid.set(nx, ny, material);
+                        // Add initial velocity if we're placing on top of other particles
+                        if should_add_velocity {
+                            grid.set_velocity(nx, ny, 1.0);
+                        } else {
+                            grid.set_velocity(nx, ny, 0.0);
+                        }
+                    }
                 }
             }
         }
