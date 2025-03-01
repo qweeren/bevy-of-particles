@@ -29,7 +29,7 @@ pub fn find_horizontal_space(grid: &Grid, x: usize, y: usize, max_distance: usiz
     
     // Check left
     for dx in 1..=max_distance {
-        if x < dx || grid.get(x - dx, y) != Material::Empty as u8 {
+        if x < dx || grid.get(x - dx, y).material_type != Material::Empty as u8 {
             break;
         }
         left_x = x - dx;
@@ -37,7 +37,7 @@ pub fn find_horizontal_space(grid: &Grid, x: usize, y: usize, max_distance: usiz
     
     // Check right
     for dx in 1..=max_distance {
-        if x + dx >= config::GRID_WIDTH || grid.get(x + dx, y) != Material::Empty as u8 {
+        if x + dx >= config::GRID_WIDTH || grid.get(x + dx, y).material_type != Material::Empty as u8 {
             break;
         }
         right_x = x + dx;
@@ -53,7 +53,7 @@ pub fn find_vertical_space(grid: &Grid, x: usize, y: usize, max_distance: usize)
     
     // Check downward
     for dy in 1..=max_distance {
-        if y + dy >= config::GRID_HEIGHT || grid.get(x, y + dy) != Material::Empty as u8 {
+        if y + dy >= config::GRID_HEIGHT || grid.get(x, y + dy).material_type != Material::Empty as u8 {
             break;
         }
         bottom_y = y + dy;

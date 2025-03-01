@@ -11,7 +11,7 @@ pub fn update_grid(mut grid: ResMut<Grid>) {
     // Collect all non-empty cells
     let mut particles: Vec<(usize, usize)> = (0..GRID_HEIGHT)
         .flat_map(|y| (0..GRID_WIDTH).map(move |x| (x, y)))
-        .filter(|&(x, y)| grid.get(x, y) != Material::Empty as u8)
+        .filter(|&(x, y)| grid.get(x, y).material_type != Material::Empty as u8)
         .collect();
 
     // Randomize update order
@@ -29,11 +29,11 @@ pub fn update_grid(mut grid: ResMut<Grid>) {
 
 fn get_material_at(x: usize, y: usize, grid: &Grid) -> Option<Material> {
     let material = grid.get(x, y);
-    if material == Material::Empty as u8 {
+    if material.material_type == Material::Empty as u8 {
         return None;
     }
     
-    Some(match material {
+    Some(match material.material_type {
         1 => Material::Sand,
         2 => Material::Water,
         3 => Material::Concrete,

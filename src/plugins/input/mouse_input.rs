@@ -33,7 +33,7 @@ fn place_material_with_brush(grid: &mut Grid, x: usize, y: usize, material: u8, 
             if grid.in_bounds(nx, ny) {
                 let ny = ny as usize;
                 if ny < config::GRID_HEIGHT - 1 && 
-                   grid.get(nx as usize, ny + 1) != Material::Empty as u8 {
+                   grid.get(nx as usize, ny + 1).material_type != Material::Empty as u8 {
                     should_add_velocity = true;
                     break 'outer;
                 }
@@ -51,8 +51,8 @@ fn place_material_with_brush(grid: &mut Grid, x: usize, y: usize, material: u8, 
             if grid.in_bounds(nx, ny) {
                 let nx = nx as usize;
                 let ny = ny as usize;
-                if grid.get(nx, ny) == Material::Empty as u8 {
-                    grid.set(nx, ny, material);
+                if grid.get(nx, ny).material_type == Material::Empty as u8 {
+                    grid.set(nx, ny, Material::from_id(material));
                     grid.set_velocity(nx, ny, if should_add_velocity { 1.0 } else { 0.0 });
                 }
             }

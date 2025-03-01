@@ -12,7 +12,7 @@ pub fn render_grid(
         for y in 0..config::GRID_HEIGHT {
             for x in 0..config::GRID_WIDTH {
                 let material_id = grid.get(x, y);
-                let material = crate::registry::material_from_id(material_id);
+                let material = crate::registry::material_from_id(grid.get(x, y).material_type);
                 let properties = material.properties();
                 let pixel_index = (y * config::GRID_WIDTH + x) * 4;
                 

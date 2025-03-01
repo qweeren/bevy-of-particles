@@ -1,5 +1,5 @@
 mod behavior;
-mod types;
+pub(crate) mod types;
 mod properties;
 
 pub use behavior::MaterialBehavior;
