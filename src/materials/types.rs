@@ -94,4 +94,13 @@ impl Particle {
     pub fn get_viscosity(&self) -> f32 {
         ((self.properties >> 7) & 0b1111) as f32 / 10.0
     }
+
+    pub fn with_color(mut self, r: u8, g: u8, b: u8) -> Self {
+        self.properties = Self::pack_properties(
+            r, g, b,
+            ((self.properties >> 11) & 0b1_1111) as u8,  // convert density bits to u8
+            ((self.properties >> 7) & 0b1111) as u8      // convert viscosity bits to u8
+        );
+        self
+    }
 }

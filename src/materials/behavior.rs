@@ -4,11 +4,23 @@ use crate::config;
 use rand::{prelude::*, rng};
 use crate::utils::grid_utils::find_horizontal_space;
 
+use super::types::Particle;
+
 const GRAVITY: f32 = 0.5;
 const MAX_FALL_SPEED: f32 = 8.0;
 const BOUNCE_FACTOR: f32 = 0.3;
 const MIN_MOVEMENT_THRESHOLD: f32 = 0.1;
-
+const FIRE_DISSIPATION_CHANCE: f32 = 0.4; // 10% for connected fire
+const FIRE_ISOLATED_DISSIPATION_CHANCE: f32 = 0.7; // 50% for isolated fire
+const FIRE_SPREAD_CHANCE: f32 = 0.3;      // 20% chance to attempt spread
+const FIRE_COLORS: [(u8, u8, u8); 4] = [
+    (255, 100, 0),   // Orange
+    (255, 60, 0),    // Bright orange
+    (255, 160, 30),  // Yellow-orange
+    (255, 50, 0),    // Deep orange
+];
+const SMOKE_DISSIPATION_CHANCE: f32 = 0.1; // 30% chance to disappear
+const FIRE_TO_SMOKE_CHANCE: f32 = 0.2; // 30% chance for dissipating fire to become smoke
 pub trait MaterialBehavior {
     fn update(&self, x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid);
 }
@@ -21,37 +33,45 @@ impl MaterialBehavior for Material {
         }
 
         let particle = old_grid.get(x, y);
-        
+
+        // Handle fire behavior separately
+        if particle.material_type == Material::Fire as u8 {
+            if handle_fire(x, y, new_grid, old_grid) {
+                return;
+            }
+        }
+
+        // Handle smoke dissipation
+        if particle.material_type == Material::Smoke as u8 {
+            if rng().gen::<f32>() < SMOKE_DISSIPATION_CHANCE {
+                new_grid.set(x, y, Material::Empty);
+                return;
+            }
+        }
+
         // If not movable, just copy the state
         if !particle.flags.contains(ParticleFlags::MOVABLE) {
             new_grid.set(x, y, *self);
             return;
         }
 
-        // Try density-based movement first for all movable particles
+        // Remaining logic for other materials (unchanged)
         if try_move_density_based(x, y, new_grid, old_grid) {
             return;
         }
-
-        // Handle rising particles
         if particle.flags.contains(ParticleFlags::RISES) {
             if rise(x, y, new_grid, old_grid) {
                 return;
             }
         } else {
-            // Handle falling particles
             if fall(x, y, new_grid, old_grid) {
                 return;
             }
         }
-
-        // Handle flowing particles
         if particle.flags.contains(ParticleFlags::FLOWS) {
             flow(x, y, new_grid, old_grid);
             return;
         }
-
-        // If no movement occurred, maintain current state
         new_grid.set(x, y, *self);
     }
 }
@@ -306,4 +326,153 @@ fn flow(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) {
 
     new_grid.set(x, y, Material::from_id(current_particle.material_type));
 }
+
+fn has_fire_neighbors(x: usize, y: usize, grid: &Grid) -> bool {
+    let directions = [
+        (-1, -1), (0, -1), (1, -1), // Above
+        (-1, 0),           (1, 0),  // Sides
+        (-1, 1),  (0, 1),  (1, 1), // Below
+    ];
+
+    for (dx, dy) in directions.iter() {
+        let new_x = x as isize + dx;
+        let new_y = y as isize + dy;
+        if new_x >= 0 && new_x < config::GRID_WIDTH as isize &&
+           new_y >= 0 && new_y < config::GRID_HEIGHT as isize {
+            let neighbor = grid.get(new_x as usize, new_y as usize);
+            if neighbor.material_type == Material::Fire as u8 {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn handle_fire(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
+    let mut rng = rng();
+
+    // Determine dissipation chance based on isolation
+    let is_isolated = !has_fire_neighbors(x, y, old_grid);
+    let dissipation_chance = if is_isolated {
+        FIRE_ISOLATED_DISSIPATION_CHANCE // 50% for isolated
+    } else {
+        FIRE_DISSIPATION_CHANCE          // 10% for connected
+    };
+
+    // Handle dissipation with chance to create smoke
+    if rng.gen::<f32>() < dissipation_chance {
+        if rng.gen::<f32>() < FIRE_TO_SMOKE_CHANCE {
+            new_grid.set(x, y, Material::Smoke);
+        } else {
+            new_grid.set(x, y, Material::Empty);
+        }
+        return true;
+    }
+
+    // Preserve existing upward movement logic
+    let upward_bias = if y > 0 {
+        let above = old_grid.get(x, y - 1).material_type == Material::Empty as u8;
+        let above_left = x > 0 && old_grid.get(x - 1, y - 1).material_type == Material::Empty as u8;
+        let above_right = x < config::GRID_WIDTH - 1 && old_grid.get(x + 1, y - 1).material_type == Material::Empty as u8;
+        
+        match (above, above_left, above_right) {
+            (true, _, _) => 0.8,    // Strongly prefer moving straight up
+            (false, true, true) => 0.6,  // Prefer diagonal movement
+            (false, true, false) => 0.4,  // Slight left bias
+            (false, false, true) => 0.4,  // Slight right bias
+            _ => 0.2,    // Limited movement options
+        }
+    } else {
+        0.0
+    };
+
+    // Randomize fire color
+    let color_idx = (rng.gen::<f32>() * FIRE_COLORS.len() as f32) as usize;
+    let (r, g, b) = FIRE_COLORS[color_idx];
+    let new_particle = Particle::new(Material::Fire).with_color(r, g, b);
+
+    // Handle upward movement
+    if rng.gen::<f32>() < upward_bias {
+        if y > 0 {
+            let dx = if rng.gen::<f32>() < 0.3 {
+                if rng.gen::<bool>() { 1 } else { -1 } // 30% chance to move diagonally
+            } else {
+                0 // 70% chance to move straight up
+            };
+            let new_x = (x as isize + dx) as usize;
+            if new_x > 0 && new_x < config::GRID_WIDTH {
+                new_grid.set_particle(new_x, y - 1, new_particle);
+                return true;
+            }
+        }
+    }
+
+    // Spread fire with directional probabilities
+    if rng.gen::<f32>() < FIRE_SPREAD_CHANCE {
+        let spread_directions = [
+            (0, -1, 0.5),  // Up: 50%
+            (-1, -1, 0.4), // Up-left: 40%
+            (1, -1, 0.4),  // Up-right: 40%
+            (-1, 0, 0.2),  // Left: 20%
+            (1, 0, 0.2),   // Right: 20%
+        ];
+
+        for (dx, dy, prob) in spread_directions.iter() {
+            let new_x = x as isize + dx;
+            let new_y = y as isize + dy;
+            
+            if new_x >= 0 && new_x < config::GRID_WIDTH as isize &&
+               new_y >= 0 && new_y < config::GRID_HEIGHT as isize {
+                let new_x = new_x as usize;
+                let new_y = new_y as usize;
+                
+                if old_grid.get(new_x, new_y).material_type == Material::Empty as u8 {
+                    if rng.gen::<f32>() < *prob {
+                        new_grid.set_particle(new_x, new_y, new_particle);
+                    }
+                }
+            }
+        }
+    }
+
+    // Maintain fire at current position if no movement/spread occurs
+    new_grid.set_particle(x, y, new_particle);
+    true
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

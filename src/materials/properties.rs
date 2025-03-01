@@ -36,9 +36,9 @@ impl Material {
                 viscosity: 1, // 0.1 * 10
             },
             Material::Fire => MaterialProperties {
-                color: (255, 50, 50),
-                density: 1,   // 0.1 * 10
-                viscosity: 1, // 0.1 * 10
+                color: (255, 100, 0),  // More orange base color
+                density: 1,   // Very light
+                viscosity: 2, // Slightly more viscous for better shape
             },
         }
     }

@@ -29,6 +29,11 @@ impl Grid {
         self.particles[y * GRID_WIDTH + x] = Particle::new(material);
     }
 
+    /// Sets the particle at (x, y)
+    pub fn set_particle(&mut self, x: usize, y: usize, particle: Particle) {
+        self.particles[y * GRID_WIDTH + x] = particle;
+    }
+
     /// Checks if (x, y) is within the grid bounds
     pub fn in_bounds(&self, x: isize, y: isize) -> bool {
         x >= 0 && x < GRID_WIDTH as isize && y >= 0 && y < GRID_HEIGHT as isize
