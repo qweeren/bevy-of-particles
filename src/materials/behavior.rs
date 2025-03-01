@@ -2,6 +2,7 @@ use crate::grid::Grid;
 use crate::materials::Material;
 use crate::config;
 use rand::{prelude::*, rng};
+use crate::utils::grid_utils::find_horizontal_space;
 
 pub trait MaterialBehavior {
     fn update(&self, x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid);
@@ -158,20 +159,78 @@ fn fall(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
 
 fn flow(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) {
     let mut rng = rng();
-    let left = x > 0 && old_grid.get(x - 1, y) == Material::Empty as u8;
-    let right = x < config::GRID_WIDTH - 1 && old_grid.get(x + 1, y) == Material::Empty as u8;
-
-    match (left, right) {
-        (true, true) => {
-            if rng.random::<bool>() {
-                new_grid.move_to(x, y, x + 1, y);
-            } else {
-                new_grid.move_to(x, y, x - 1, y);
-            }
-        }
-        (true, false) => new_grid.move_to(x, y, x - 1, y),
-        (false, true) => new_grid.move_to(x, y, x + 1, y),
-        (false, false) => new_grid.set(x, y, old_grid.get(x, y)),
+    let current_material = Material::from_id(old_grid.get(x, y));
+    let viscosity = current_material.properties().viscosity;
+    
+    // Calculate max movement distance based on viscosity (1.0 = no movement, 0.0 = max movement)
+    let max_distance = ((1.0 - viscosity) * 5.0).round() as usize;
+    if max_distance == 0 || rng.gen::<f32>() <= viscosity {
+        new_grid.set(x, y, old_grid.get(x, y));
+        return;
     }
+
+    // Find available space
+    let (left_bound, right_bound) = find_horizontal_space(old_grid, x, y, max_distance);
+    
+    // Calculate actual movement
+    if left_bound == x && right_bound == x {
+        // Nowhere to move
+        new_grid.set(x, y, old_grid.get(x, y));
+        return;
+    }
+
+    // Determine movement distance and direction
+    let total_space = right_bound - left_bound;
+    if total_space > 0 {
+        let mut target_x = x;
+
+        if left_bound < x && right_bound > x {
+            // Can move both directions
+            if rng.gen::<bool>() {
+                // Move left - prefer maximum movement
+                let max_left = x - left_bound;
+                let move_amount = if rng.gen::<f32>() < 0.7 {
+                    max_left  // 70% chance to move maximum distance
+                } else {
+                    rng.gen_range(1..=max_left)
+                };
+                target_x = x - move_amount;
+            } else {
+                // Move right - prefer maximum movement
+                let max_right = right_bound - x;
+                let move_amount = if rng.gen::<f32>() < 0.7 {
+                    max_right  // 70% chance to move maximum distance
+                } else {
+                    rng.gen_range(1..=max_right)
+                };
+                target_x = x + move_amount;
+            }
+        } else if left_bound < x {
+            // Can only move left
+            let max_left = x - left_bound;
+            let move_amount = if rng.gen::<f32>() < 0.7 {
+                max_left
+            } else {
+                rng.gen_range(1..=max_left)
+            };
+            target_x = x - move_amount;
+        } else if right_bound > x {
+            // Can only move right
+            let max_right = right_bound - x;
+            let move_amount = if rng.gen::<f32>() < 0.7 {
+                max_right
+            } else {
+                rng.gen_range(1..=max_right)
+            };
+            target_x = x + move_amount;
+        }
+
+        if target_x != x {
+            new_grid.move_to(x, y, target_x, y);
+            return;
+        }
+    }
+
+    new_grid.set(x, y, old_grid.get(x, y));
 }
 

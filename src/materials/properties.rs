@@ -12,27 +12,27 @@ impl Material {
             Material::Empty => MaterialProperties {
                 color: (0, 0, 0),
                 density: 0.0,
-                viscosity: 0.0,
+                viscosity: 1.0,
             },
             Material::Sand => MaterialProperties {
                 color: (194, 178, 128),
                 density: 1.6,
-                viscosity: 0.0,
+                viscosity: 0.9, // Sand barely flows
             },
             Material::Water => MaterialProperties {
                 color: (0, 119, 190),
                 density: 1.0,
-                viscosity: 0.8,
+                viscosity: 0.1, // Reduced significantly to make water much more fluid
             },
             Material::Concrete => MaterialProperties {
                 color: (128, 128, 128),
                 density: 2.4,
-                viscosity: 0.0,
+                viscosity: 1.0, // Concrete doesn't flow
             },
             Material::Smoke => MaterialProperties {
                 color: (200, 200, 200),
                 density: 0.1,
-                viscosity: 0.2,
+                viscosity: 0.1, // Smoke spreads very easily
             },
         }
     }

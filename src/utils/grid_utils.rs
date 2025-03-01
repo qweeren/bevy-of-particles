@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use crate::config::{GRID_WIDTH, GRID_HEIGHT, CELL_SIZE, CAMERA_OFFSET_X};
+use crate::config::{self, CAMERA_OFFSET_X, CELL_SIZE, GRID_HEIGHT, GRID_WIDTH};
+use crate::grid::Grid;
+use crate::materials::Material;
 
 /// Converts window coordinates to grid coordinates
 /// Returns None if the coordinates are outside the grid bounds
@@ -17,4 +19,29 @@ pub fn get_grid_pos(window: &Window, camera: &Camera, camera_transform: &GlobalT
         }
     }
     None
+}
+
+/// Finds the maximum distance a particle can move horizontally before hitting an obstacle
+/// Returns the maximum possible x coordinate in both directions (left_x, right_x)
+pub fn find_horizontal_space(grid: &Grid, x: usize, y: usize, max_distance: usize) -> (usize, usize) {
+    let mut left_x = x;
+    let mut right_x = x;
+    
+    // Check left
+    for dx in 1..=max_distance {
+        if x < dx || grid.get(x - dx, y) != Material::Empty as u8 {
+            break;
+        }
+        left_x = x - dx;
+    }
+    
+    // Check right
+    for dx in 1..=max_distance {
+        if x + dx >= config::GRID_WIDTH || grid.get(x + dx, y) != Material::Empty as u8 {
+            break;
+        }
+        right_x = x + dx;
+    }
+    
+    (left_x, right_x)
 }
