@@ -1,8 +1,12 @@
-use crate::grid::Grid;
+use crate::{grid::Grid, utils::grid_utils::find_vertical_space};
 use crate::materials::Material;
 use crate::config;
 use rand::{prelude::*, rng};
 use crate::utils::grid_utils::find_horizontal_space;
+
+const GRAVITY: f32 = 0.5;
+const MAX_FALL_SPEED: f32 = 8.0;
+const BOUNCE_FACTOR: f32 = 0.3;
 
 pub trait MaterialBehavior {
     fn update(&self, x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid);
@@ -124,37 +128,36 @@ fn rise(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
 }
 
 fn fall(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
-    if y < config::GRID_HEIGHT - 1 && old_grid.get(x, y + 1) == Material::Empty as u8 {
-        new_grid.move_to(x, y, x, y + 1);
-        return true;
+    let mut current_velocity = old_grid.get_velocity(x, y);
+    
+    // Apply gravity
+    current_velocity += GRAVITY;
+    current_velocity = current_velocity.min(MAX_FALL_SPEED);
+
+    // Convert velocity to discrete steps
+    let fall_distance = current_velocity.abs().round() as usize;
+    if fall_distance == 0 {
+        return false;
     }
 
-    if y < config::GRID_HEIGHT - 1 {
-        let left = x > 0 && old_grid.get(x - 1, y + 1) == Material::Empty as u8;
-        let right = x < config::GRID_WIDTH - 1 && old_grid.get(x + 1, y + 1) == Material::Empty as u8;
-        
-        match (left, right) {
-            (true, true) => {
-                if rng().random::<bool>() {
-                    new_grid.move_to(x, y, x - 1, y + 1)
-                } else {
-                    new_grid.move_to(x, y, x + 1, y + 1)
-                }
-                true
-            }
-            (true, false) => {
-                new_grid.move_to(x, y, x - 1, y + 1);
-                true
-            }
-            (false, true) => {
-                new_grid.move_to(x, y, x + 1, y + 1);
-                true
-            }
-            (false, false) => false
+    let bottom_y = find_vertical_space(old_grid, x, y, fall_distance);
+    
+    if bottom_y == y {
+        // Hit an obstacle, bounce
+        if current_velocity > 1.0 {
+            current_velocity *= -BOUNCE_FACTOR;
+        } else {
+            current_velocity = 0.0;
         }
-    } else {
-        false
+        new_grid.set(x, y, old_grid.get(x, y));
+        new_grid.set_velocity(x, y, current_velocity);
+        return false;
     }
+
+    // Move to the new position
+    new_grid.move_to_with_velocity(x, y, x, bottom_y);
+    new_grid.set_velocity(x, bottom_y, current_velocity);
+    true
 }
 
 fn flow(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) {

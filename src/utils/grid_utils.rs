@@ -45,3 +45,19 @@ pub fn find_horizontal_space(grid: &Grid, x: usize, y: usize, max_distance: usiz
     
     (left_x, right_x)
 }
+
+/// Finds the maximum distance a particle can move vertically before hitting an obstacle
+/// Returns the maximum possible y coordinate in downward direction
+pub fn find_vertical_space(grid: &Grid, x: usize, y: usize, max_distance: usize) -> usize {
+    let mut bottom_y = y;
+    
+    // Check downward
+    for dy in 1..=max_distance {
+        if y + dy >= config::GRID_HEIGHT || grid.get(x, y + dy) != Material::Empty as u8 {
+            break;
+        }
+        bottom_y = y + dy;
+    }
+    
+    bottom_y
+}

@@ -5,6 +5,7 @@ use crate::config::{GRID_WIDTH, GRID_HEIGHT};
 #[derive(Clone, Resource)]
 pub struct Grid {
     pub cells: Vec<u8>, // 1D vector representing the 2D grid
+    pub velocities: Vec<f32>,
 }
 
 impl Grid {
@@ -12,6 +13,7 @@ impl Grid {
     pub fn new() -> Self {
         Grid {
             cells: vec![0; GRID_WIDTH * GRID_HEIGHT], // All cells start as empty
+            velocities: vec![0.0; GRID_WIDTH * GRID_HEIGHT],
         }
     }
 
@@ -41,6 +43,27 @@ impl Grid {
     pub fn move_to(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
         if self.get(x2, y2) == 0 {
             self.swap(x1, y1, x2, y2);
+        }
+    }
+
+    pub fn get_velocity(&self, x: usize, y: usize) -> f32 {
+        self.velocities[y * GRID_WIDTH + x]
+    }
+
+    pub fn set_velocity(&mut self, x: usize, y: usize, velocity: f32) {
+        self.velocities[y * GRID_WIDTH + x] = velocity;
+    }
+
+    pub fn move_to_with_velocity(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
+        if self.get(x2, y2) == 0 {
+            let material = self.get(x1, y1);
+            let velocity = self.get_velocity(x1, y1);
+            
+            self.set(x2, y2, material);
+            self.set(x1, y1, 0);
+            
+            self.set_velocity(x2, y2, velocity);
+            self.set_velocity(x1, y1, 0.0);
         }
     }
 }
