@@ -144,10 +144,47 @@ fn fall(x: usize, y: usize, new_grid: &mut Grid, old_grid: &Grid) -> bool {
 
     current_velocity = current_velocity.min(MAX_FALL_SPEED);
 
+    // Transfer velocity to nearby sand particles
+    if current_velocity > 1.0 {
+        let transfer_amount = current_velocity * 0.2; // Transfer 20% of velocity
+        
+        // Check adjacent cells
+        let check_positions = [
+            (x.wrapping_sub(1), y), // Left
+            (x + 1, y),            // Right
+            (x, y.wrapping_sub(1)), // Up
+            (x + 1, y.wrapping_sub(1)), // Up-Right
+            (x.wrapping_sub(1), y.wrapping_sub(1)), // Up-Left
+            (x, y + 1),            // Down
+            (x + 1, y + 1),        // Down-Right
+            (x.wrapping_sub(1), y + 1), // Down-Left
+        ];
+
+        for (nx, ny) in check_positions {
+            if nx < config::GRID_WIDTH && ny < config::GRID_HEIGHT {
+                if old_grid.get(nx, ny) == Material::Sand as u8 {
+                    let neighbor_velocity = old_grid.get_velocity(nx, ny);
+                    if neighbor_velocity < current_velocity {
+                        new_grid.set_velocity(nx, ny, neighbor_velocity + transfer_amount);
+                    }
+                }
+            }
+        }
+        
+        // Reduce current particle's velocity after transfer
+        current_velocity *= 0.8; // Reduce by the amount transferred
+    }
+
     // Convert velocity to discrete steps, but always move at least 1 if there's any velocity
     let fall_distance = (current_velocity.abs().round() as usize).max(1);
 
     let bottom_y = find_vertical_space(old_grid, x, y, fall_distance);
+    
+    // Continue accumulating velocity while falling through empty space
+    if bottom_y > y + 1 {
+        current_velocity += GRAVITY * ((bottom_y - y) as f32);
+        current_velocity = current_velocity.min(MAX_FALL_SPEED);
+    }
     
     if bottom_y == y {
         // Hit an obstacle, check for diagonal movement
