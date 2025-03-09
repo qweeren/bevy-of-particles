@@ -16,8 +16,6 @@ A physics-based particle simulation built with Rust and the Bevy game engine. Th
 - Customizable brush size for drawing
 - User-friendly sidebar interface
 
-[gif here displaying the material selection and brush size controls]
-
 ## Technical Details
 
 - Built with Rust 🦀
